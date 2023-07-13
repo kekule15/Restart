@@ -58,6 +58,7 @@ struct HomeScreen: View {
                 // PERFORM SOME FUNCTION
                 
                 withAnimation{
+                    playSound(sound: "success", type: "m4a")
                     isOnboardingActive = true
                 }
                 
