@@ -16,6 +16,17 @@ struct OnboardingScreen: View {
     @State private var isAnimating : Bool = false
     
     @State private var buttonOffset : CGFloat = 0
+    
+    @State private var imageOffset : CGSize = .zero
+    
+    @State private var indicatorOpacity : Double = 1.0
+    
+    @State private var textTitle : String = "Share."
+    
+    
+    // MARK: - BODY SECTION
+    
+    
     var body: some View {
         ZStack {
             Color("ColorBlue").ignoresSafeArea(.all, edges: .all)
@@ -27,10 +38,12 @@ struct OnboardingScreen: View {
                 
                 VStack (spacing: 0){
                     
-                    Text("Share.")
+                    Text(textTitle)
                         .font(.system(size: 65))
                         .fontWeight(.heavy)
                         .foregroundColor(.white)
+                        .transition(.opacity)
+                        .id(textTitle)
                     
                     
                     Text("""
@@ -51,12 +64,54 @@ struct OnboardingScreen: View {
                 
                 ZStack{
                     CircleGroupView(ShapeColor: .white, ShapeOpacity: 0.2)
+                        .offset(x: imageOffset.width * -1)
+                        .blur(radius: abs(imageOffset.width / 5 ))
+                        .animation(.easeOut(duration: 1), value: isAnimating)
                     Image("character-1")
                         .resizable()
                         .scaledToFit()
                         .opacity(isAnimating ? 1 : 0)
                         .animation(.easeOut(duration: 0.5), value: isAnimating)
+                        .offset(x: imageOffset.width * 1.2, y: 0)
+                        .rotationEffect(.degrees(Double(imageOffset.width / 20)))
+                        .gesture(
+                            DragGesture()
+                            .onChanged{
+                            
+                            gesture in
+                            if abs(imageOffset.width) <= 150{
+                                imageOffset  = gesture.translation
+                                withAnimation(.linear(duration: 0.25)){
+                                    indicatorOpacity = 0
+                                    textTitle = "Give."
+                                }
+                            }
+                        }
+                            .onEnded{
+                                _ in
+                                imageOffset = .zero
+                                
+                                withAnimation(.linear(duration: 0.25)){
+                                    indicatorOpacity = 1
+                                    textTitle = "Share."
+                                }
+                            }
+                        )
+                        .animation(.easeOut(duration: 1), value: imageOffset)
                 }
+                .overlay(
+                    Image(systemName: "arrow.left.and.right.circle")
+                        
+                        .foregroundColor(.white)
+                        .font(.system(size: 44, weight: .ultraLight))
+                        .offset(y:0)
+                        .opacity(isAnimating ? 1 : 0)
+                        .animation(.easeOut(duration: 1).delay(2), value: isAnimating)
+                        .opacity(indicatorOpacity)
+                    ,
+                    alignment: .bottom
+                
+                )
                 
                 
                 Spacer()
@@ -111,14 +166,16 @@ struct OnboardingScreen: View {
                                     }
                                 }
                                 .onEnded{_ in
-                                    if buttonOffset > buttonWidth / 2 {
-                                        buttonOffset = buttonWidth - 80
-                                        isOnboardingActive = false
-                                        
-                                    } else{
-                                        buttonOffset = 0
+                                    withAnimation(Animation.easeOut(duration: 1)){
+                                        if buttonOffset > buttonWidth / 2 {
+                                            buttonOffset = buttonWidth - 80
+                                            isOnboardingActive = false
+                                            
+                                        } else{
+                                            buttonOffset = 0
+                                        }
                                     }
-                                   
+                                    
                                     
                                 }
                         )
